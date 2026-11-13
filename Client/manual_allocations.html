@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual Allocation & Testing Manager</title>
+    <style>
+        :root {
+            --bg-main: #050d13;
+            --bg-card: #081620;
+            --bg-card-hover: #0d2232;
+            --bg-input: #04090d;
+            --border: #132b3c;
+            --border-divider: #18374d;
+            --primary: #00bcd4;
+            --primary-hover: #26c6da;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --warning: #ff9f43;
+            --text-main: #f1f2f6;
+            --text-muted: #8395a7;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            padding: 24px;
+            line-height: 1.5;
+        }
+
+        .container { max-width: 1300px; margin: 0 auto; }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .brand { display: flex; align-items: center; gap: 12px; }
+        .brand h1 { font-size: 22px; color: var(--primary); font-weight: 800; }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+            margin-bottom: 24px;
+        }
+
+        .card h2 {
+            font-size: 16px;
+            color: var(--warning);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex: 1;
+            min-width: 180px;
+        }
+        .form-group label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+        .form-group input, .form-group select {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 9px 12px;
+            border-radius: 5px;
+            font-size: 14px;
+            outline: none;
+        }
+        .form-group input:focus, .form-group select:focus { border-color: var(--primary); }
+
+        .btn {
+            background: var(--primary);
+            color: #000;
+            font-weight: 700;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: 0.2s;
+            height: 40px;
+        }
+        .btn:hover { background: var(--primary-hover); }
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-danger:hover { background: #c0392b; }
+        .btn-success { background: var(--success); color: #000; }
+        .btn-success:hover { background: #27ae60; }
+
+        .svc-results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 14px;
+            margin-top: 16px;
+        }
+
+        .svc-card {
+            background: #06111a;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 14px;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .svc-card:hover, .svc-card.selected {
+            border-color: var(--primary);
+            background: #0c2333;
+        }
+
+        .badge-unit {
+            display: inline-block;
+            background: #0284c7;
+            color: #fff;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 700;
+            font-family: monospace;
+            margin-right: 4px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 14px 20px;
+            border-radius: 6px;
+            font-weight: 700;
+            display: none;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+            z-index: 9999;
+        }
+        .toast.success { background: var(--success); color: #000; display: block; }
+        .toast.error { background: var(--danger); color: #fff; display: block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="brand">
+                <span style="font-size: 26px;">🔗</span>
+                <div>
+                    <h1>Manual Train Unit Allocation & Testing Tool</h1>
+                    <p style="font-size: 13px; color: var(--text-muted);">Attach, replace, or detach physical unit formations to any scheduled train</p>
+                </div>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <label for="api-host" style="font-size: 12px; font-weight: 700;">API Host:</label>
+                <input type="text" id="api-host" value="http://192.168.4.26:5000" style="background: var(--bg-card); border: 1px solid var(--border); color:#fff; padding:6px 10px; border-radius:4px; font-size:13px;">
+            </div>
+        </header>
+
+        <!-- Step 1: Find Service -->
+        <div class="card">
+            <h2>Step 1: Find Target Train Service</h2>
+            <form onsubmit="searchServices(event)" class="form-row">
+                <div class="form-group" style="flex: 2;">
+                    <label for="query-input">Headcode, CIF UID, or Service ID:</label>
+                    <input type="text" id="query-input" placeholder="e.g. 9W14, 5T81, 2U34, W45597..." required>
+                </div>
+                <div class="form-group">
+                    <label for="date-input">Evaluation / Running Date:</label>
+                    <input type="date" id="date-input" required>
+                </div>
+                <div class="form-group" style="flex: 0 0 auto;">
+                    <button type="submit" class="btn">Search Services</button>
+                </div>
+            </form>
+
+            <div id="service-results" class="svc-results-grid"></div>
+        </div>
+
+        <!-- Step 2: Allocate Units -->
+        <div id="allocation-card" class="card" style="display: none;">
+            <h2>Step 2: Assign Formations & Units to <span id="selected-svc-title" style="color: var(--primary);"></span></h2>
+
+            <div class="form-row" style="margin-bottom: 16px;">
+                <div class="form-group" style="flex: 2;">
+                    <label for="units-input">Unit Number(s) (Comma or space-separated):</label>
+                    <input type="text" id="units-input" placeholder="e.g. 700015 or 377512, 377519" style="font-size: 16px; font-family: monospace; font-weight: 700;">
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <button class="btn btn-success" onclick="applyAllocation('attach')">➕ Attach / Add Units</button>
+                <button class="btn" style="background: #3b82f6; color: #fff;" onclick="applyAllocation('replace')">🔄 Replace Entire Formation</button>
+                <button class="btn btn-danger" onclick="applyAllocation('detach')">❌ Detach / Clear All Units</button>
+            </div>
+        </div>
+
+        <div id="toast" class="toast"></div>
+    </div>
+
+    <script>
+        let selectedService = null;
+
+        function initDates() {
+            document.getElementById("date-input").value = new Date().toISOString().split("T")[0];
+        }
+
+        function getApi() {
+            return document.getElementById("api-host").value.replace(/\/+$/, "");
+        }
+
+        function showToast(msg, isError = false) {
+            const t = document.getElementById("toast");
+            t.innerText = msg;
+            t.className = `toast ${isError ? 'error' : 'success'}`;
+            setTimeout(() => { t.className = 'toast'; }, 4000);
+        }
+
+        async function searchServices(e) {
+            if (e) e.preventDefault();
+            const q = document.getElementById("query-input").value.trim();
+            const d = document.getElementById("date-input").value;
+            if (!q) return;
+
+            try {
+                const res = await fetch(`${getApi()}/api/service/${encodeURIComponent(q)}?date=${encodeURIComponent(d)}`);
+                const resultsContainer = document.getElementById("service-results");
+                document.getElementById("allocation-card").style.display = "none";
+
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    resultsContainer.innerHTML = `<div style="color: var(--danger); padding: 12px;">${err.message || 'No services found on this date.'}</div>`;
+                    return;
+                }
+
+                let data = await res.json();
+                if (!Array.isArray(data)) data = [data];
+
+                let html = '';
+                data.forEach(s => {
+                    const activeUnits = s.live_metrics?.active_units || [];
+                    const unitsHtml = activeUnits.length 
+                        ? activeUnits.map(u => `<span class="badge-unit">${u}</span>`).join(' ') 
+                        : '<span style="color: var(--text-muted);">Unallocated</span>';
+
+                    html += `
+                        <div class="svc-card" onclick='selectService(${JSON.stringify(s)})'>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <span style="font-size: 16px; font-weight: 800; color: var(--primary); font-family: monospace;">${s.headcode}</span>
+                                <span style="font-size: 12px; color: var(--warning); font-weight: 700;">${s.validity_range?.stp_type || 'WTT'}</span>
+                            </div>
+                            <div style="font-weight: 700; font-size: 14px; margin-bottom: 4px;">
+                                ${s.origin_time || ''} ${s.origin} ➔ ${s.destination}
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">
+                                Operator: <b>${s.toc}</b> | UID: <b>${s.cif_uid}</b> | ID: <b>${s.service_id}</b>
+                            </div>
+                            <div style="font-size: 13px;">
+                                Current Formation: ${unitsHtml}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                resultsContainer.innerHTML = html;
+            } catch (err) {
+                showToast(`Search error: ${err.message}`, true);
+            }
+        }
+
+        function selectService(s) {
+            selectedService = s;
+            document.querySelectorAll(".svc-card").forEach(c => c.classList.remove("selected"));
+            
+            const allocCard = document.getElementById("allocation-card");
+            allocCard.style.display = "block";
+            document.getElementById("selected-svc-title").innerText = `${s.headcode} (${s.origin} ➔ ${s.destination} @ ${s.origin_time})`;
+            
+            const existingUnits = s.live_metrics?.active_units || [];
+            document.getElementById("units-input").value = existingUnits.join(", ");
+            allocCard.scrollIntoView({ behavior: "smooth" });
+        }
+
+        async function applyAllocation(action) {
+            if (!selectedService) {
+                showToast("Please select a train service first.", true);
+                return;
+            }
+
+            const rawUnits = document.getElementById("units-input").value;
+            const unitsList = rawUnits.split(/[\s,]+/).map(x => x.trim()).filter(x => x.length > 0);
+            const targetDate = document.getElementById("date-input").value;
+
+            if (action !== 'detach' && unitsList.length === 0) {
+                showToast("Please enter at least one unit number.", true);
+                return;
+            }
+
+            try {
+                const res = await fetch(`${getApi()}/api/admin/manual-allocation`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        service_id: selectedService.service_id,
+                        unit_numbers: unitsList,
+                        date: targetDate,
+                        action: action,
+                        default_toc: selectedService.toc
+                    })
+                });
+
+                const result = await res.json();
+                if (!res.ok) throw new Error(result.error || "Failed to update allocation");
+
+                showToast(result.message || "Allocations updated successfully!");
+                searchServices();
+            } catch (err) {
+                showToast(`Allocation failed: ${err.message}`, true);
+            }
+        }
+
+        initDates();
+    </script>
+</body>
+</html>

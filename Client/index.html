@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>UK Rail Fleet & Live Timetable Tracker</title>
+    <link rel="stylesheet" href="style.css?v=3.0">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="brand">
+                <span class="logo">🚆</span>
+                <h1>UK Rail Fleet & Timetable Tracker</h1>
+            </div>
+            <div class="header-controls">
+                <div class="api-endpoint-picker">
+                    <label for="api-url">API Host:</label>
+                    <input type="text" id="api-url" value="http://127.0.0.1:5000">
+                </div>
+                <div id="connection-status" class="status-pill status-offline">API Offline</div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="nav-tabs">
+            <button id="tab-btn-location" class="tab-btn active" onclick="switchTab('location')">Station / Location Board</button>
+            <button id="tab-btn-direct" class="tab-btn" onclick="switchTab('direct')">Direct Service & Fleet Lookup</button>
+        </nav>
+
+        <!-- Notification Toast -->
+        <div id="toast" class="toast"></div>
+
+        <!-- TAB 1: Station / Location Departure & Passing Board -->
+        <section id="tab-location" class="tab-content active">
+            <div class="search-card">
+                <form id="location-form" onsubmit="handleLocationFormSubmit(event)">
+                    <div class="form-row primary-row">
+                        <div class="form-group flex-2 search-box-wrapper">
+                            <label for="loc-input">Location (Station Name, CRS, or TIPLOC):</label>
+                            <input type="text" id="loc-input" placeholder="e.g. LBG, London Bridge, STP, LTN, BTN..." autocomplete="off">
+                            <div id="autocomplete-list" class="autocomplete-dropdown"></div>
+                        </div>
+
+                        <div class="form-group flex-1">
+                            <label for="toc-select">Operator (TOC):</label>
+                            <select id="toc-select">
+                                <option value="ALL">All Operators</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group flex-1">
+                            <label for="date-input">Evaluation Date:</label>
+                            <input type="date" id="date-input">
+                        </div>
+
+                        <div class="form-group flex-1">
+                            <label for="when-select">Time Window:</label>
+                            <select id="when-select">
+                                <option value="window">Now (± 1 Hour)</option>
+                                <option value="all">Full Day Schedule</option>
+                                <option value="00:00">00:00</option>
+                                <option value="02:00">02:00</option>
+                                <option value="04:00">04:00</option>
+                                <option value="06:00">06:00</option>
+                                <option value="08:00">08:00</option>
+                                <option value="10:00">10:00</option>
+                                <option value="12:00">12:00</option>
+                                <option value="14:00">14:00</option>
+                                <option value="16:00">16:00</option>
+                                <option value="18:00">18:00</option>
+                                <option value="20:00">20:00</option>
+                                <option value="22:00">22:00</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group btn-group">
+                            <button type="submit" class="btn-primary">Search Board</button>
+                        </div>
+                    </div>
+
+                    <div class="toggle-row">
+                        <a href="javascript:void(0)" id="filter-toggle-btn" onclick="toggleFilterPanel()">Hide detailed filtering options ▴</a>
+                    </div>
+
+                    <div id="filter-panel" class="filter-panel">
+                        <div class="filter-header">Routing & Service Type Constraints</div>
+                        <div class="form-row">
+                            <div class="form-group flex-1">
+                                <label for="prev-call-input">Called Previously At:</label>
+                                <input type="text" id="prev-call-input" placeholder="e.g. BFR, ECR, BTH...">
+                            </div>
+
+                            <div class="form-group flex-1">
+                                <label for="later-call-input">Calling Later At:</label>
+                                <input type="text" id="later-call-input" placeholder="e.g. GTW, BOG, BTN...">
+                            </div>
+
+                            <div class="form-group flex-1">
+                                <label for="service-type-select">Show Services:</label>
+                                <select id="service-type-select">
+                                    <option value="all">All Passenger, Freight & ECS</option>
+                                    <option value="passenger_calls">Passenger Calling Only</option>
+                                    <option value="calls">All Calling (Starts, Calls, Terminating)</option>
+                                    <option value="passes">Passing Non-Stop Only</option>
+                                    <option value="trains_only">Trains Only (Suppress Replacement Buses)</option>
+                                    <option value="passenger_services">All Passenger (Calls & Passes)</option>
+                                    <option value="non_passenger">Non-Passenger & ECS Only</option>
+                                    <option value="freight">Freight Only</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="stp-toggle-row">
+                            <span class="stp-label">Include Schedule Overlays:</span>
+                            <label class="stp-check"><input type="checkbox" id="stp-wtt" checked> Permanent (WTT)</label>
+                            <label class="stp-check"><input type="checkbox" id="stp-var" checked> Variations (VAR)</label>
+                            <label class="stp-check"><input type="checkbox" id="stp-stp" checked> Short Term Plans (STP)</label>
+                            <label class="stp-check"><input type="checkbox" id="stp-can"> Cancellations (CAN)</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- TAB 2: Direct Service & Fleet Lookup -->
+        <section id="tab-direct" class="tab-content">
+            <div class="search-card">
+                <form id="direct-form" onsubmit="handleDirectFormSubmit(event)">
+                    <div class="form-row primary-row">
+                        <div class="form-group flex-2">
+                            <label for="direct-input">Enter Headcode, CIF UID, Traction Class, or Unit Number:</label>
+                            <input type="text" id="direct-input" placeholder="e.g. 2B38, U90544, 377, 395, 377512..." autocomplete="off">
+                        </div>
+
+                        <div class="form-group flex-1">
+                            <label for="direct-date-input">Evaluation Date:</label>
+                            <input type="date" id="direct-date-input">
+                        </div>
+
+                        <div class="form-group btn-group">
+                            <button type="submit" class="btn-primary">Direct Lookup</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- Dynamic Results Viewport -->
+        <main id="app-view"></main>
+    </div>
+
+    <script src="app.js?v=3.0"></script>
+</body>
+</html>

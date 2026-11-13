@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fleet Reference & Diagram Asset Manager</title>
+    <style>
+        :root {
+            --bg-main: #050d13;
+            --bg-card: #081620;
+            --bg-card-hover: #0d2232;
+            --bg-input: #04090d;
+            --border: #132b3c;
+            --border-divider: #18374d;
+            --primary: #00bcd4;
+            --primary-hover: #26c6da;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --warning: #ff9f43;
+            --text-main: #f1f2f6;
+            --text-muted: #8395a7;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            padding: 24px;
+            line-height: 1.5;
+        }
+
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .brand { display: flex; align-items: center; gap: 12px; }
+        .brand h1 { font-size: 22px; color: var(--primary); font-weight: 800; }
+        .brand span { font-size: 26px; }
+
+        .api-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-card);
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+        .api-bar input {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            width: 170px;
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 440px 1fr;
+            gap: 24px;
+        }
+        @media (max-width: 1024px) { .grid-layout { grid-template-columns: 1fr; } }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            font-size: 16px;
+            color: var(--warning);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-bottom: 14px;
+        }
+        .form-group label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+        .form-group input, .form-group select {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 9px 12px;
+            border-radius: 5px;
+            font-size: 14px;
+            outline: none;
+        }
+        .form-group input:focus, .form-group select:focus { border-color: var(--primary); }
+
+        .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+        .btn {
+            background: var(--primary);
+            color: #000;
+            font-weight: 700;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn:hover { background: var(--primary-hover); }
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-danger:hover { background: #c0392b; }
+        .btn-success { background: var(--success); color: #000; }
+        .btn-success:hover { background: #27ae60; }
+        .btn-block { width: 100%; margin-top: 6px; }
+
+        /* Path Previewer */
+        input.path-preview {
+            background: #03080c;
+            border: 1px dashed var(--primary);
+            padding: 10px 12px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #a5d6a7;
+            width: 100%;
+            transition: 0.2s;
+        }
+        input.path-preview:read-only {
+            border-color: var(--border);
+            color: var(--text-muted);
+            cursor: not-allowed;
+            background: var(--bg-input);
+        }
+
+        /* Search & Filter Bar */
+        .filter-toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+        .filter-toolbar input, .filter-toolbar select {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 13px;
+        }
+
+        /* Table */
+        .table-wrap {
+            max-height: 720px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            text-align: left;
+        }
+        thead th {
+            background: #0b1e2c;
+            color: #fff;
+            padding: 10px 12px;
+            font-weight: 700;
+            position: sticky;
+            top: 0;
+            border-bottom: 2px solid var(--border-divider);
+            text-transform: uppercase;
+            font-size: 11px;
+            z-index: 10;
+        }
+        tbody tr {
+            border-bottom: 1px solid var(--border-divider);
+            transition: background 0.15s;
+        }
+        tbody tr:hover { background: var(--bg-card-hover); }
+        tbody td { padding: 9px 12px; }
+
+        .unit-code { font-family: monospace; font-weight: 800; color: var(--primary); font-size: 14px; }
+        .badge-toc { padding: 2px 6px; border-radius: 3px; font-weight: 800; font-family: monospace; font-size: 11px; background: #1e293b; color: #fff; }
+        .badge-brand { padding: 2px 6px; border-radius: 3px; font-size: 11px; background: #132b3c; color: #81d4fa; }
+        .badge-variant { padding: 2px 6px; border-radius: 3px; font-size: 11px; font-family: monospace; background: #374151; color: #e2e8f0; }
+        .badge-manual { padding: 2px 4px; border-radius: 3px; font-size: 10px; background: var(--warning); color: #000; font-weight: 800; margin-left: 6px; }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 14px 20px;
+            border-radius: 6px;
+            font-weight: 700;
+            display: none;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+            z-index: 9999;
+        }
+        .toast.success { background: var(--success); color: #000; display: block; }
+        .toast.error { background: var(--danger); color: #fff; display: block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="brand">
+                <span>⚙️</span>
+                <div>
+                    <h1>Fleet Reference & Formation Asset Manager</h1>
+                    <p style="font-size: 13px; color: var(--text-muted);">Manage unit specifications, diagram variants, and folder paths</p>
+                </div>
+            </div>
+            <div class="api-bar">
+                <label for="api-host" style="font-size: 12px; font-weight: 700;">API:</label>
+                <input type="text" id="api-host" value="http://192.168.4.26:5000">
+                <button class="btn" onclick="loadFleetData()">Reload Data</button>
+            </div>
+        </header>
+
+        <div class="grid-layout">
+            <!-- Left Column: Bulk & Single Editor Panel -->
+            <div>
+                <div class="card">
+                    <h2 id="editor-title">Edit / Bulk Configure Units</h2>
+                    
+                    <div class="form-group">
+                        <label for="target-mode">Target Mode:</label>
+                        <select id="target-mode" onchange="switchTargetMode()">
+                            <option value="range">Range of Unit Numbers (e.g. 387101-387127)</option>
+                            <option value="class">Entire Fleet Class (e.g. Class 379)</option>
+                            <option value="single">Single Unit Number</option>
+                        </select>
+                    </div>
+
+                    <!-- Target Fields -->
+                    <div id="field-range" class="row-2">
+                        <div class="form-group">
+                            <label for="range-start">Start Unit #:</label>
+                            <input type="text" id="range-start" placeholder="e.g. 387101">
+                        </div>
+                        <div class="form-group">
+                            <label for="range-end">End Unit #:</label>
+                            <input type="text" id="range-end" placeholder="e.g. 387127">
+                        </div>
+                    </div>
+
+                    <div id="field-class" class="form-group" style="display: none;">
+                        <label for="target-class">Class Number:</label>
+                        <input type="text" id="target-class" placeholder="e.g. 379, 458, 387" oninput="updatePathPreview()">
+                    </div>
+
+                    <div id="field-single" class="form-group" style="display: none;">
+                        <label for="target-unit">Unit Number:</label>
+                        <input type="text" id="target-unit" placeholder="e.g. 387102" oninput="autofillSingleUnit(this.value)">
+                    </div>
+
+                    <hr style="border: 0; border-top: 1px dashed var(--border); margin: 16px 0;">
+
+                    <!-- Attributes -->
+                    <div class="row-2">
+                        <div class="form-group">
+                            <label for="unit-class">Train Class:</label>
+                            <input type="text" id="unit-class" placeholder="e.g. 387" oninput="updatePathPreview()">
+                        </div>
+                        <div class="form-group">
+                            <label for="unit-toc">TOC Code (ATOC):</label>
+                            <input type="text" id="unit-toc" placeholder="e.g. GW, SE, SN" oninput="updatePathPreview()">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="unit-coaches">Coach Count:</label>
+                        <input type="number" id="unit-coaches" value="4" min="1" max="16">
+                    </div>
+
+                    <div class="row-2">
+                        <div class="form-group">
+                            <label for="unit-subclass">Brand Name (Display):</label>
+                            <input type="text" id="unit-subclass" placeholder="e.g. Networker, Javelin">
+                        </div>
+                        <div class="form-group">
+                            <label for="unit-variant">Diagram Variant:</label>
+                            <input type="text" id="unit-variant" placeholder="e.g. 1, NSE, GBR" oninput="updatePathPreview()">
+                        </div>
+                    </div>
+
+                    <!-- Diagram Path Configuration -->
+                    <div class="form-group" style="margin-top: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <label>Formation Diagram Path:</label>
+                            <label style="display: flex; align-items: center; gap: 6px; color: var(--primary); text-transform: none; cursor: pointer;">
+                                <input type="checkbox" id="manual-path-toggle" onchange="toggleManualPath()"> 
+                                Manual Override
+                            </label>
+                        </div>
+                        <input type="text" id="path-preview-box" class="path-preview" readonly value="Client/Assets/Train_Diagrams/{class}/{toc}/{variant}">
+                    </div>
+
+                    <button class="btn btn-success btn-block" onclick="saveUnits()" style="margin-top: 16px;">Apply & Save to Fleet Reference</button>
+                </div>
+            </div>
+
+            <!-- Right Column: Searchable Fleet Table -->
+            <div>
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h2>Fleet Reference Table (<span id="fleet-count">0</span> Units)</h2>
+                    </div>
+
+                    <div class="filter-toolbar">
+                        <input type="text" id="search-unit" placeholder="Search Unit # or Class..." oninput="renderTable()" style="flex: 2;">
+                        <select id="filter-toc" onchange="renderTable()" style="flex: 1;">
+                            <option value="ALL">All Operators</option>
+                        </select>
+                        <select id="filter-class" onchange="renderTable()" style="flex: 1;">
+                            <option value="ALL">All Classes</option>
+                        </select>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Unit #</th>
+                                    <th>Class</th>
+                                    <th>Brand</th>
+                                    <th>Variant</th>
+                                    <th>TOC</th>
+                                    <th>Coaches</th>
+                                    <th>Diagram Asset Path</th>
+                                    <th style="text-align: right;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fleet-tbody">
+                                <tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px;">Loading fleet data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="toast" class="toast"></div>
+    </div>
+
+    <script>
+        let FLEET_DB = {};
+
+        function getApi() {
+            return document.getElementById("api-host").value.replace(/\/+$/, "");
+        }
+
+        function showToast(msg, isError = false) {
+            const t = document.getElementById("toast");
+            t.innerText = msg;
+            t.className = `toast ${isError ? 'error' : 'success'}`;
+            setTimeout(() => { t.className = 'toast'; }, 4000);
+        }
+
+        function switchTargetMode() {
+            const mode = document.getElementById("target-mode").value;
+            document.getElementById("field-range").style.display = mode === 'range' ? 'grid' : 'none';
+            document.getElementById("field-class").style.display = mode === 'class' ? 'flex' : 'none';
+            document.getElementById("field-single").style.display = mode === 'single' ? 'flex' : 'none';
+        }
+
+        function toggleManualPath() {
+            const isManual = document.getElementById("manual-path-toggle").checked;
+            const pathBox = document.getElementById("path-preview-box");
+            pathBox.readOnly = !isManual;
+            if (!isManual) {
+                updatePathPreview();
+            } else {
+                pathBox.focus();
+            }
+        }
+
+        function updatePathPreview() {
+            if (document.getElementById("manual-path-toggle").checked) return;
+
+            const cl = document.getElementById("unit-class").value.trim() || document.getElementById("target-class").value.trim() || "{class}";
+            const toc = document.getElementById("unit-toc").value.trim().toUpperCase() || "{toc}";
+            const variant = document.getElementById("unit-variant").value.trim();
+
+            let path = `Client/Assets/Train_Diagrams/${cl}/${toc}`;
+            if (variant) {
+                path += `/${variant}`;
+            }
+            document.getElementById("path-preview-box").value = path;
+        }
+
+        async function loadFleetData() {
+            try {
+                const res = await fetch(`${getApi()}/api/fleet-reference`);
+                if (!res.ok) throw new Error("Could not reach API endpoint");
+                FLEET_DB = await res.json();
+                populateFilters();
+                renderTable();
+                showToast(`Loaded ${Object.keys(FLEET_DB).length} units from fleet_reference.json`);
+            } catch (err) {
+                showToast(`Error loading fleet data: ${err.message}`, true);
+            }
+        }
+
+        function populateFilters() {
+            const tocs = new Set();
+            const classes = new Set();
+
+            Object.values(FLEET_DB).forEach(u => {
+                if (u.toc) tocs.add(u.toc.toUpperCase());
+                if (u.class) classes.add(u.class);
+            });
+
+            const tocSel = document.getElementById("filter-toc");
+            tocSel.innerHTML = '<option value="ALL">All Operators</option>' + 
+                Array.from(tocs).sort().map(t => `<option value="${t}">${t}</option>`).join('');
+
+            const classSel = document.getElementById("filter-class");
+            classSel.innerHTML = '<option value="ALL">All Classes</option>' + 
+                Array.from(classes).sort().map(c => `<option value="${c}">Class ${c}</option>`).join('');
+        }
+
+        function renderTable() {
+            const q = document.getElementById("search-unit").value.trim().toUpperCase();
+            const tocFilter = document.getElementById("filter-toc").value;
+            const classFilter = document.getElementById("filter-class").value;
+
+            const tbody = document.getElementById("fleet-tbody");
+            const units = Object.keys(FLEET_DB).sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
+            
+            let html = '';
+            let count = 0;
+
+            units.forEach(uNum => {
+                const item = FLEET_DB[uNum];
+                const cl = item.class || uNum.substring(0, 3);
+                const toc = item.toc || 'ZZ';
+                const brand = item.subclass || '—';
+                const variant = item.variant || '—';
+                const coaches = item.coaches || 4;
+
+                if (q && !uNum.includes(q) && !cl.includes(q)) return;
+                if (tocFilter !== 'ALL' && toc !== tocFilter) return;
+                if (classFilter !== 'ALL' && cl !== classFilter) return;
+
+                count++;
+                
+                let relPath = '';
+                let manualBadge = '';
+                if (item.diagram_path) {
+                    relPath = item.diagram_path;
+                    manualBadge = '<span class="badge-manual">MANUAL</span>';
+                } else {
+                    relPath = `Client/Assets/Train_Diagrams/${cl}/${toc}${item.variant ? '/' + item.variant : ''}`;
+                }
+
+                html += `
+                    <tr>
+                        <td class="unit-code">${uNum}</td>
+                        <td>Class ${cl}</td>
+                        <td><span class="badge-brand">${brand}</span></td>
+                        <td><span class="badge-variant">${variant}</span></td>
+                        <td><span class="badge-toc">${toc}</span></td>
+                        <td><b>${coaches}</b></td>
+                        <td style="font-family: monospace; font-size: 11px; color: var(--text-muted); word-break: break-all;">${relPath} ${manualBadge}</td>
+                        <td style="text-align: right;">
+                            <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="loadIntoEditor('${uNum}')">Edit</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById("fleet-count").innerText = count;
+            tbody.innerHTML = html || `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px;">No matching units found.</td></tr>`;
+        }
+
+        function loadIntoEditor(unitNum) {
+            const item = FLEET_DB[unitNum] || {};
+            document.getElementById("target-mode").value = "single";
+            switchTargetMode();
+
+            document.getElementById("target-unit").value = unitNum;
+            document.getElementById("unit-class").value = item.class || unitNum.substring(0, 3);
+            document.getElementById("unit-toc").value = item.toc || 'ZZ';
+            document.getElementById("unit-coaches").value = item.coaches || 4;
+            document.getElementById("unit-subclass").value = item.subclass || '';
+            document.getElementById("unit-variant").value = item.variant || '';
+
+            if (item.diagram_path) {
+                document.getElementById("manual-path-toggle").checked = true;
+                document.getElementById("path-preview-box").readOnly = false;
+                document.getElementById("path-preview-box").value = item.diagram_path;
+            } else {
+                document.getElementById("manual-path-toggle").checked = false;
+                document.getElementById("path-preview-box").readOnly = true;
+                updatePathPreview();
+            }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function autofillSingleUnit(unitNum) {
+            if (FLEET_DB[unitNum]) {
+                const item = FLEET_DB[unitNum];
+                document.getElementById("unit-class").value = item.class || unitNum.substring(0, 3);
+                document.getElementById("unit-toc").value = item.toc || '';
+                document.getElementById("unit-coaches").value = item.coaches || 4;
+                document.getElementById("unit-subclass").value = item.subclass || '';
+                document.getElementById("unit-variant").value = item.variant || '';
+                
+                if (item.diagram_path) {
+                    document.getElementById("manual-path-toggle").checked = true;
+                    document.getElementById("path-preview-box").readOnly = false;
+                    document.getElementById("path-preview-box").value = item.diagram_path;
+                } else {
+                    document.getElementById("manual-path-toggle").checked = false;
+                    document.getElementById("path-preview-box").readOnly = true;
+                }
+            } else if (unitNum.length >= 3 && /^\d+$/.test(unitNum)) {
+                document.getElementById("unit-class").value = unitNum.substring(0, 3);
+                document.getElementById("manual-path-toggle").checked = false;
+                document.getElementById("path-preview-box").readOnly = true;
+            }
+            updatePathPreview();
+        }
+
+        async function saveUnits() {
+            const mode = document.getElementById("target-mode").value;
+            const trainClass = document.getElementById("unit-class").value.trim();
+            const tocCode = document.getElementById("unit-toc").value.trim().toUpperCase();
+            const coaches = parseInt(document.getElementById("unit-coaches").value) || 4;
+            const subclass = document.getElementById("unit-subclass").value.trim(); // Brand
+            const variant = document.getElementById("unit-variant").value.trim();   // Drawing subclass
+            
+            const isManualPath = document.getElementById("manual-path-toggle").checked;
+            const diagramPath = isManualPath ? document.getElementById("path-preview-box").value.trim() : null;
+
+            const payload = {
+                mode: mode,
+                train_class: trainClass,
+                toc_code: tocCode,
+                coaches: coaches,
+                subclass: subclass,
+                variant: variant,
+                diagram_path: diagramPath
+            };
+
+            if (mode === 'range') {
+                payload.start_unit = document.getElementById("range-start").value.trim();
+                payload.end_unit = document.getElementById("range-end").value.trim();
+                if (!payload.start_unit || !payload.end_unit) {
+                    showToast("Please provide both start and end unit numbers for range update.", true);
+                    return;
+                }
+            } else if (mode === 'class') {
+                payload.target_class = document.getElementById("target-class").value.trim();
+                if (!payload.target_class) {
+                    showToast("Please enter target class number.", true);
+                    return;
+                }
+            } else if (mode === 'single') {
+                payload.unit_number = document.getElementById("target-unit").value.trim();
+                if (!payload.unit_number) {
+                    showToast("Please enter unit number.", true);
+                    return;
+                }
+            }
+
+            try {
+                const res = await fetch(`${getApi()}/api/admin/fleet-reference/update`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                const result = await res.json();
+                if (!res.ok) throw new Error(result.error || "Failed to update fleet reference");
+
+                showToast(result.message || "Fleet reference updated successfully!");
+                await loadFleetData();
+            } catch (err) {
+                showToast(`Update failed: ${err.message}`, true);
+            }
+        }
+
+        // Initialize on load
+        loadFleetData();
+        updatePathPreview();
+    </script>
+</body>
+</html>
