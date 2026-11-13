@@ -15,7 +15,7 @@ class GBExplorerApp(tk.Tk):
         self.minsize(980, 680)
         self.configure(bg="#081014")
 
-        self.api_base = tk.StringVar(value="http://192.168.4.26:5000")
+        self.api_base = tk.StringVar(value="http://145.241.233.162:5000")
         self.status_var = tk.StringVar(value="Ready")
 
         # Search Form State Variables

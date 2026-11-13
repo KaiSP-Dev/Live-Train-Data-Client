@@ -6,7 +6,12 @@ let DIAGRAM_CONFIG = {
     REVERSE_FORMATION: false
 };
 
-let API_BASE = `http://${window.location.hostname || 'localhost'}:5000`;
+// Auto-detect if we are running locally or on Vercel
+const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+let API_BASE = isLocal 
+    ? 'http://localhost:5000' 
+    : 'http://145.241.233.162:5000';
 
 let LOCATIONS_CACHE = {};
 let CRS_CACHE = {};
